@@ -151,7 +151,9 @@ const chordProgression = [
   [392.0, 493.88, 587.33], 
 ];
 const colorProg = [
-
+    "red",
+    "orange",
+    "yellow"
 ]
 let currentChordIndex = 0;
 
@@ -182,7 +184,10 @@ function playChordProgression(startTime) {
     console.log("chord on end")
     playChordProgression(nextStartTime);
     playDrumLoop(nextStartTime)
-  };
+    doArt(currentChordIndex)
+    ctx.fillStyle = colorProg[currentChordIndex];
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
 }
 
 function playDrumLoop(startTime) {
@@ -212,6 +217,8 @@ window.addEventListener("resize", () => {
 const tokenData = generateRandomTokenData();
 const R = new Random(); // Prohb random initialization
 let chordDuration = 1;
+let ctx = document.getElementById("canvas").getContext("2d");
+
 
 window.addEventListener('load', () => {
   const startTime = audioGenerator.audioContext.currentTime;
