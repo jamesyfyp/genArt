@@ -1,3 +1,14 @@
+
+// Token Gen
+function generateRandomTokenData() {
+  // Generate a random 128-bit hexadecimal value
+  const random128BitHex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
+  return {
+    hash: `0x${random128BitHex}`
+  };
+}
+const tokenData = generateRandomTokenData();
 // Prohibition Deterministic Random
 class Random {
   constructor() {
@@ -54,15 +65,7 @@ class Random {
   }
 }
 
-// Token Gen
-function generateRandomTokenData() {
-  // Generate a random 128-bit hexadecimal value
-  const random128BitHex = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-
-  return {
-    hash: `0x${random128BitHex}`
-  };
-}
+const R = new Random(); // Prohb random initialization
 
 ///start set up
 function canvasConfig() {
@@ -94,7 +97,105 @@ function doArt(color) {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 doArt("red");
+// drawing line
 
+function draw() {
+  requestAnimationFrame(draw);
+  analyser.getByteTimeDomainData(dataArray);
+
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "rgb(0, 255, 111, .2)";
+
+  ctx.beginPath();
+
+  const sliceWidth = (canvas.width * 1.0) / bufferLength;
+  let x = 0;
+
+  for (let i = 0; i < bufferLength; i++) {
+    const v = dataArray[i] / 128.0;
+    const y = (v * canvas.height) / 2;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+    x += sliceWidth;
+  }
+
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+
+function draw2() {
+  requestAnimationFrame(draw2);
+  analyser2.getByteTimeDomainData(dataArray2);
+
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = "rgb(250, 250, 250, .2)";
+
+  ctx.beginPath();
+
+  const sliceWidth = (canvas.width * 1.0) / bufferLength2;
+  let x = 0;
+
+  for (let i = 0; i < bufferLength2; i++) {
+    const v = dataArray2[i] / 128.0;
+    const y = (v * canvas.height) / 2;
+
+    if (i === 0) {
+      ctx.moveTo(y, x);
+    } else {
+      ctx.lineTo(y, x);
+    }
+    x += sliceWidth;
+  }
+
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+}
+
+
+// get initial value
+function getRandomFrequencyInRange() {
+  return Math.pow(2, R.random_dec(0.1, .99) * 9) * 27.5; // A0 to C8 frequency range
+}
+//generate chord progression values 
+function generateRandomChordProgression(numChords) {
+  const randomChordProgression = [];
+  
+  for (let i = 0; i < numChords; i++) {
+    let randomBaseFrequency;
+
+    do {
+      randomBaseFrequency = getRandomFrequencyInRange();
+    } while (randomChordProgression.some(chord => chord.includes(randomBaseFrequency)));
+
+    const randomChord = [];
+
+    randomChord.push(randomBaseFrequency);
+
+    const consonantFrequencies = [randomBaseFrequency * 4 / 3, randomBaseFrequency * 5 / 4];
+
+    for (const freq of consonantFrequencies) {
+      if (freq >= 27.5 && freq <= 4186.01) { // Check if frequency is within the piano range
+        randomChord.push(freq);
+      }
+    }
+
+    if (randomChord.length < 3) {
+      randomChord.push(consonantFrequencies[0]); // Fallback to first consonant frequency
+    }
+
+    randomChordProgression.push(randomChord);
+  }
+
+  return randomChordProgression;
+}
+
+function getRandomFrequencyInRange() {
+  return Math.pow(2, Math.random() * 9) * 27.5; // A0 to C8 frequency range
+}
 class AudioGenerator {
   constructor() {
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -141,19 +242,19 @@ class AudioGenerator {
 }
 
 const audioGenerator = new AudioGenerator();
-
+const analyser = audioGenerator.audioContext.createAnalyser();
+const analyser2 = audioGenerator.audioContext.createAnalyser();
 // Define frequencies for different sounds
-const kickFrequencies = [60];
-const snareFrequencies = [100];
-const chordProgression = [
-  [261.63, 329.63, 392.0], 
-  [349.23, 440.0, 523.25], 
-  [392.0, 493.88, 587.33], 
-];
+const kickFrequencies = [R.random_num(.1, 75)];
+const snareFrequencies = [R.random_num(.1, 75)];;
+let chordProgression = generateRandomChordProgression( 6)
 const colorProg = [
-    "red",
-    "orange",
-    "yellow"
+   "rgba(255, 0, 0, 0.3)",
+   "rgba(255, 165, 0, 0.3)",
+   "rgba(255, 255, 0, 0.3)",
+   'rgba(0, 128, 0, 0.3)',
+   "rgba(0, 0, 255, 0.3)",
+   "rgba(128, 0, 128, 0.3)",
 ]
 let currentChordIndex = 0;
 
@@ -174,7 +275,7 @@ function playChordProgression(startTime) {
   
   // Schedule the chord source to start at the given startTime
   chordSource.start(startTime);
-
+  chordSource.connect(analyser2)
   // Move to the next chord in the progression
   currentChordIndex = (currentChordIndex + 1) % chordProgression.length;
 
@@ -198,7 +299,7 @@ function playDrumLoop(startTime) {
     drumInterval / 500, 
   );
   drumSource.connect(audioGenerator.audioContext.destination);
-
+  drumSource.connect(analyser)
   // Schedule the drum source to start at the given startTime
   drumSource.start(startTime);
 }
@@ -214,10 +315,18 @@ window.addEventListener("resize", () => {
 });
 
 // Start globals
-const tokenData = generateRandomTokenData();
-const R = new Random(); // Prohb random initialization
-let chordDuration = 1;
+let chordDuration = R.random_num(.01, 2);
 let ctx = document.getElementById("canvas").getContext("2d");
+analyser.fftSize = 2048;
+const bufferLength = analyser.frequencyBinCount;
+const dataArray = new Uint8Array(bufferLength);
+analyser.getByteTimeDomainData(dataArray);
+analyser2.fftSize = 2048;
+const bufferLength2 = analyser2.frequencyBinCount;
+const dataArray2 = new Uint8Array(bufferLength2);
+analyser2.getByteTimeDomainData(dataArray2);
+draw()
+draw2()
 
 
 window.addEventListener('load', () => {
