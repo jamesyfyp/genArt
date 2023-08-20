@@ -96,15 +96,15 @@ function doArt(color) {
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
-doArt("red");
+
 // drawing line
 
 function draw() {
   requestAnimationFrame(draw);
   analyser.getByteTimeDomainData(dataArray);
 
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgb(0, 255, 111, .2)";
+  ctx.lineWidth = R.random_int(5,30);
+  ctx.strokeStyle = colorProg[currentChordIndex][2];
 
   ctx.beginPath();
 
@@ -131,8 +131,8 @@ function draw2() {
   requestAnimationFrame(draw2);
   analyser2.getByteTimeDomainData(dataArray2);
 
-  ctx.lineWidth = 10;
-  ctx.strokeStyle = "rgb(250, 250, 250, .2)";
+  ctx.lineWidth = R.random_int(5,30);
+  ctx.strokeStyle = ctx.strokeStyle = colorProg[currentChordIndex][1];
 
   ctx.beginPath();
 
@@ -196,6 +196,40 @@ function generateRandomChordProgression(numChords) {
 function getRandomFrequencyInRange() {
   return Math.pow(2, Math.random() * 9) * 27.5; // A0 to C8 frequency range
 }
+
+function mapValue(value, fromMin, fromMax, toMin, toMax) {
+  return (value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin;
+}
+
+function generateColorsFromChord(chord) {
+  // Convert frequency to hue value
+  const h = mapValue(chord[0], 27.5, 4186.01, 0, 360);
+
+  // Saturation (0 - 100)
+  const s = 100;
+
+  // Lightness (0 - 100)
+  const l = 50;
+ 
+  // Opacity (0 - 1)
+  const a = 0.3;
+
+  // Generate complementary hue
+  const complementaryHue = (h + 180) % 360;
+
+  // Generate additional hues by shifting by 30 and 60 degrees
+  const hueShift1 = (h + 30) % 360;
+  const hueShift2 = (h + 60) % 360;
+
+  // Construct color strings
+  const mainColor = `hsla(${h}, ${s}%, ${l}%, ${a})`;
+  const complementaryColor = `hsla(${complementaryHue}, ${s}%, ${l}%, ${a})`;
+  const additionalColor1 = `hsla(${hueShift1}, ${s}%, ${l}%, ${a})`;
+  const additionalColor2 = `hsla(${hueShift2}, ${s}%, ${l}%, ${a})`;
+
+  return [mainColor, complementaryColor, additionalColor1, additionalColor2];
+}
+
 class AudioGenerator {
   constructor() {
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -247,15 +281,9 @@ const analyser2 = audioGenerator.audioContext.createAnalyser();
 // Define frequencies for different sounds
 const kickFrequencies = [R.random_num(.1, 75)];
 const snareFrequencies = [R.random_num(.1, 75)];;
-let chordProgression = generateRandomChordProgression( 6)
-const colorProg = [
-   "rgba(255, 0, 0, 0.3)",
-   "rgba(255, 165, 0, 0.3)",
-   "rgba(255, 255, 0, 0.3)",
-   'rgba(0, 128, 0, 0.3)',
-   "rgba(0, 0, 255, 0.3)",
-   "rgba(128, 0, 128, 0.3)",
-]
+let chordProgression = generateRandomChordProgression(R.random_int(2,64))
+let colorProg = []
+chordProgression.map(chord=>{colorProg.push(generateColorsFromChord(chord))})
 let currentChordIndex = 0;
 
 // Create audio buffers for different sounds
@@ -282,21 +310,20 @@ function playChordProgression(startTime) {
   // Schedule the next chord change after the duration of the current chord
   const nextStartTime = startTime + chordDuration;
   chordSource.onended = () => {
-    console.log("chord on end")
     playChordProgression(nextStartTime);
     playDrumLoop(nextStartTime)
     doArt(currentChordIndex)
-    ctx.fillStyle = colorProg[currentChordIndex];
+    ctx.fillStyle = colorProg[currentChordIndex][0];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     };
 }
 
 function playDrumLoop(startTime) {
-  const drumInterval = chordDuration * 200; 
+  const drumInterval = chordDuration * R.random_num(100,1000); 
   const drumSource = audioGenerator.audioContext.createBufferSource();
   drumSource.buffer = audioGenerator.createBuffer(
     [...kickFrequencies, ...snareFrequencies], 
-    drumInterval / 500, 
+    drumInterval / R.random_num(100,1000), 
   );
   drumSource.connect(audioGenerator.audioContext.destination);
   drumSource.connect(analyser)
@@ -315,7 +342,7 @@ window.addEventListener("resize", () => {
 });
 
 // Start globals
-let chordDuration = R.random_num(.01, 2);
+let chordDuration = R.random_num(.1, 6);
 let ctx = document.getElementById("canvas").getContext("2d");
 analyser.fftSize = 2048;
 const bufferLength = analyser.frequencyBinCount;
