@@ -310,6 +310,7 @@ function playChordProgression(startTime) {
   // Schedule the next chord change after the duration of the current chord
   const nextStartTime = startTime + chordDuration;
   chordSource.onended = () => {
+    chordDuration = R.random_num(.1, 2);
     playChordProgression(nextStartTime);
     playDrumLoop(nextStartTime)
     doArt(currentChordIndex)
@@ -342,7 +343,7 @@ window.addEventListener("resize", () => {
 });
 
 // Start globals
-let chordDuration = R.random_num(.1, 6);
+let chordDuration = R.random_num(.1, 2);
 let ctx = document.getElementById("canvas").getContext("2d");
 analyser.fftSize = 2048;
 const bufferLength = analyser.frequencyBinCount;
