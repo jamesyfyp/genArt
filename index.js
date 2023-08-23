@@ -68,6 +68,7 @@ class Random {
 const R = new Random(); // Prohb random initialization
 
 ///start set up
+
 function canvasConfig() {
   const body = document.querySelector("body");
   body.style.background = "black";
@@ -80,11 +81,24 @@ function canvasConfig() {
   container.id = "art";
   container.style.display = "flex";
   container.style.justifyContent = "center";
+  container.style.position = "relative"
   container.style.alignItems = "center";
   container.style.height = "100vh";
   let canvas = document.createElement("canvas");
   canvas.id = "canvas";
   body.appendChild(container);
+  let filter = document.createElement("div")
+  filter.id = "filter_1"
+  filter.style.width = taller ? `${width}px` : `${height}px`;
+  filter.style.position = "absolute"
+  filter.style.height =  taller ? `${width}px` : `${height}px`;
+  container.appendChild(filter);
+  let filter2 = document.createElement("div")
+  filter2.id = "filter_2"
+  filter2.style.width = taller ? `${width}px` : `${height}px`;
+  filter2.style.position = "absolute"
+  filter2.style.height =  taller ? `${width}px` : `${height}px`;
+  container.appendChild(filter2);
   container.appendChild(canvas);
   canvas.width = taller ? width : height;
   canvas.height = taller ? width : height;
@@ -96,9 +110,12 @@ function doArt(color) {
   ctx.fillStyle = color;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
+// drawing line and filters (the line update creates the loop for the background update)
 
-// drawing line
-
+let filterValue_1 = R.random_int(0,25000)
+let filterValue_2 = R.random_int(0,1000)
+const interval = R.random_int(100, 5000)
+let direction = false
 function draw() {
   requestAnimationFrame(draw);
   analyser.getByteTimeDomainData(dataArray);
@@ -113,19 +130,51 @@ function draw() {
 
   for (let i = 0; i < bufferLength; i++) {
     const v = dataArray[i] / 128.0;
+     
     const y = (v * canvas.height) / 2;
-
     if (i === 0) {
       ctx.moveTo(x, y);
     } else {
       ctx.lineTo(x, y);
     }
     x += sliceWidth;
+    
   }
-
+  
   ctx.lineTo(canvas.width, canvas.height / 2);
   ctx.stroke();
+
+   if (filterValue_1 > interval*chordProgression.length) {
+    direction = true
+  } 
+  if (filterValue_1 < -interval*chordProgression.length) {
+    direction = false
+  } 
+  if (direction2) {
+    filterValue_2 = filterValue_2 - interval
+    filterValue_1 = filterValue_1 - interval
+  } else {
+    filterValue_2 = filterValue_2 + interval
+    filterValue_1 = filterValue_1 + interval
+  }
+  filter1Update(colorProg[currentChordIndex][4], colorProg[currentChordIndex][5], Math.abs(filterValue_1), Math.abs(filterValue_2))
 }
+
+function filter1Update(color_1, color_2, px1, px2){
+  const filter = document.getElementById("filter_1")
+
+  filter.style.background = `repeating-conic-gradient(${color_1} 0 .00015%,${color_2} 0 .00020%) 0 0/${px1}px ${px2}px`;
+}
+
+function filter2Update(color_1, color_2, px1, px2){
+  const filter = document.getElementById("filter_2")
+ filter.style.background = `repeating-conic-gradient(${color_1} 0 .00015%,${color_2} 0 .00020%) 0 0/${px1}px ${px2}px`;
+}
+
+let filter2Value_1 = R.random_int(100,200)
+let filter2Value_2 = R.random_int(200,300)
+const interval2 = R.random_int(100, 5000)
+let direction2 = false
 
 function draw2() {
   requestAnimationFrame(draw2);
@@ -150,11 +199,24 @@ function draw2() {
     }
     x += sliceWidth;
   }
-
   ctx.lineTo(canvas.width, canvas.height / 2);
   ctx.stroke();
+  if (filter2Value_1 > interval2*chordProgression.length) {
+    direction2 = true
+  } 
+  if (filter2Value_1 < -interval2*chordProgression.length) {
+    direction2 = false
+  } 
+  if (direction2) {
+    filter2Value_2 = filter2Value_2 - interval
+    filter2Value_1 = filter2Value_1 - interval
+  } else {
+    filter2Value_2 = filter2Value_2 + interval
+    filter2Value_1 = filter2Value_1 + interval
+  }
+  
+  filter2Update(colorProg[currentChordIndex][6], colorProg[currentChordIndex][7], Math.abs(filter2Value_1), Math.abs(filter2Value_2))
 }
-
 
 // get initial value
 function getRandomFrequencyInRange() {
@@ -163,7 +225,6 @@ function getRandomFrequencyInRange() {
 //generate chord progression values 
 function generateRandomChordProgression(numChords) {
   const randomChordProgression = [];
-  
   for (let i = 0; i < numChords; i++) {
     let randomBaseFrequency;
 
@@ -193,10 +254,6 @@ function generateRandomChordProgression(numChords) {
   return randomChordProgression;
 }
 
-function getRandomFrequencyInRange() {
-  return Math.pow(2, Math.random() * 9) * 27.5; // A0 to C8 frequency range
-}
-
 function mapValue(value, fromMin, fromMax, toMin, toMax) {
   return (value - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin;
 }
@@ -212,7 +269,7 @@ function generateColorsFromChord(chord) {
   const l = 50;
  
   // Opacity (0 - 1)
-  const a = 0.3;
+  const a = 0.2;
 
   // Generate complementary hue
   const complementaryHue = (h + 180) % 360;
@@ -221,13 +278,32 @@ function generateColorsFromChord(chord) {
   const hueShift1 = (h + 30) % 360;
   const hueShift2 = (h + 60) % 360;
 
-  // Construct color strings
+  // Generate 4 more hues by shifting by 120, 150, 180, and 210 degrees
+  const hueShift3 = (h + 120) % 360;
+  const hueShift4 = (h + 150) % 360;
+  const hueShift5 = (h + 180) % 360;
+  const hueShift6 = (h + 210) % 360;
+
+  // Construct color strings for all 8 hues
   const mainColor = `hsla(${h}, ${s}%, ${l}%, ${a})`;
   const complementaryColor = `hsla(${complementaryHue}, ${s}%, ${l}%, ${a})`;
   const additionalColor1 = `hsla(${hueShift1}, ${s}%, ${l}%, ${a})`;
   const additionalColor2 = `hsla(${hueShift2}, ${s}%, ${l}%, ${a})`;
+  const additionalColor3 = `hsla(${hueShift3}, ${s}%, ${l}%, ${a + .03})`;
+  const additionalColor4 = `hsla(${hueShift4}, ${s}%, ${l}%, ${a + .03})`;
+  const additionalColor5 = `hsla(${hueShift5}, ${s}%, ${l}%, ${a + .07})`;
+  const additionalColor6 = `hsla(${hueShift6}, ${s}%, ${l}%, ${a + .07})`;
 
-  return [mainColor, complementaryColor, additionalColor1, additionalColor2];
+  return [
+    mainColor,
+    complementaryColor,
+    additionalColor1,
+    additionalColor2,
+    additionalColor3,
+    additionalColor4,
+    additionalColor5,
+    additionalColor6
+  ];
 }
 
 class AudioGenerator {
@@ -237,7 +313,6 @@ class AudioGenerator {
       throw "Web Audio API is not supported in this browser.";
     }
   }
-
   createBuffer(frequencies, duration, type = "sawtooth", volume = 1) {
     const sampleRate = this.audioContext.sampleRate;
     const bufferSize = duration * sampleRate;
@@ -247,14 +322,11 @@ class AudioGenerator {
     for (let i = 0; i < bufferSize; i++) {
       const time = i / sampleRate;
       let value = 0;
-
       for (const frequency of frequencies) {
         value += Math.sin(2 * Math.PI * frequency * time);
       }
-
       data[i] = value * volume;
     }
-
     return buffer;
   }
 
@@ -278,10 +350,11 @@ class AudioGenerator {
 const audioGenerator = new AudioGenerator();
 const analyser = audioGenerator.audioContext.createAnalyser();
 const analyser2 = audioGenerator.audioContext.createAnalyser();
+
 // Define frequencies for different sounds
 const kickFrequencies = [R.random_num(.1, 75)];
 const snareFrequencies = [R.random_num(.1, 75)];;
-let chordProgression = generateRandomChordProgression(R.random_int(2,64))
+let chordProgression = generateRandomChordProgression(R.random_int(8, 16))
 let colorProg = []
 chordProgression.map(chord=>{colorProg.push(generateColorsFromChord(chord))})
 let currentChordIndex = 0;
@@ -291,7 +364,7 @@ const kickBuffer = audioGenerator.createBuffer(kickFrequencies, 0.1);
 const snareBuffer = audioGenerator.createBuffer(snareFrequencies, 0.2);
 
 // Play functions for different sounds
-function playChordProgression(startTime) {
+function playChordProgression(startTime) { 
   const chordBuffer = audioGenerator.createBuffer(
     chordProgression[currentChordIndex], 
     chordDuration
@@ -310,7 +383,7 @@ function playChordProgression(startTime) {
   // Schedule the next chord change after the duration of the current chord
   const nextStartTime = startTime + chordDuration;
   chordSource.onended = () => {
-    chordDuration = R.random_num(.1, 2);
+    chordDuration = R.random_int(1, 2);
     playChordProgression(nextStartTime);
     playDrumLoop(nextStartTime)
     doArt(currentChordIndex)
@@ -320,7 +393,7 @@ function playChordProgression(startTime) {
 }
 
 function playDrumLoop(startTime) {
-  const drumInterval = chordDuration * R.random_num(100,1000); 
+  const drumInterval = chordDuration * R.random_num(500, 5000); 
   const drumSource = audioGenerator.audioContext.createBufferSource();
   drumSource.buffer = audioGenerator.createBuffer(
     [...kickFrequencies, ...snareFrequencies], 
@@ -360,5 +433,4 @@ draw2()
 window.addEventListener('load', () => {
   const startTime = audioGenerator.audioContext.currentTime;
   playChordProgression(startTime);
-  playDrumLoop(startTime); 
 });
