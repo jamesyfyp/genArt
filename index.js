@@ -89,12 +89,14 @@ function canvasConfig() {
   body.appendChild(container);
   let filter = document.createElement("div")
   filter.id = "filter_1"
+  filter.style.zIndex = 100
   filter.style.width = taller ? `${width}px` : `${height}px`;
   filter.style.position = "absolute"
   filter.style.height =  taller ? `${width}px` : `${height}px`;
   container.appendChild(filter);
   let filter2 = document.createElement("div")
   filter2.id = "filter_2"
+  filter2.style.zIndex = 110
   filter2.style.width = taller ? `${width}px` : `${height}px`;
   filter2.style.position = "absolute"
   filter2.style.height =  taller ? `${width}px` : `${height}px`;
@@ -312,23 +314,37 @@ class AudioGenerator {
     if (!this.audioContext) {
       throw "Web Audio API is not supported in this browser.";
     }
+    this.masterGainNode = this.audioContext.createGain(); // Create a gain node
+    this.masterGainNode.connect(this.audioContext.destination); // Connect the gain node to the audio destination
   }
-  createBuffer(frequencies, duration, type = "sawtooth", volume = 1) {
-    const sampleRate = this.audioContext.sampleRate;
-    const bufferSize = duration * sampleRate;
-    const buffer = this.audioContext.createBuffer(1, bufferSize, sampleRate);
-    const data = buffer.getChannelData(0);
+  setGain(value) {
+    console.log("hit", value)
+    this.masterGainNode.gain.setValueAtTime(value, this.audioContext.currentTime);
+  }
 
-    for (let i = 0; i < bufferSize; i++) {
-      const time = i / sampleRate;
-      let value = 0;
-      for (const frequency of frequencies) {
-        value += Math.sin(2 * Math.PI * frequency * time);
-      }
-      data[i] = value * volume;
-    }
-    return buffer;
+  mute() {
+    this.setGain(0);
   }
+
+  unmute() {
+    this.setGain(1);
+  }
+  createBuffer(frequencies, duration) {
+  const sampleRate = this.audioContext.sampleRate;
+  const bufferSize = duration * sampleRate;
+  const buffer = this.audioContext.createBuffer(1, bufferSize, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < bufferSize; i++) {
+    const time = i / sampleRate;
+    let value = 0;
+    for (const frequency of frequencies) {
+      value += Math.sin(2 * Math.PI * frequency * time);
+    }
+    data[i] = value;
+  }
+  return buffer;
+}
 
   playBuffer(buffer, startTime) {
     const source = this.audioContext.createBufferSource();
@@ -337,9 +353,9 @@ class AudioGenerator {
     source.start(startTime);
   }
 
-  createBufferLoop(frequencies, duration, type = "sawtooth", volume = 1) {
+  createBufferLoop(frequencies, duration, type = "sawtooth") {
     const source = this.audioContext.createBufferSource();
-    const buffer = this.createBuffer(frequencies, duration, type, volume);
+    const buffer = this.createBuffer(frequencies, duration, type);
     source.buffer = buffer;
     source.loop = true;
     source.connect(this.audioContext.destination);
@@ -429,8 +445,14 @@ analyser2.getByteTimeDomainData(dataArray2);
 draw()
 draw2()
 
-
+let clicked = false
 window.addEventListener('load', () => {
-  const startTime = audioGenerator.audioContext.currentTime;
-  playChordProgression(startTime);
+  audioGenerator.mute(); 
+  document.querySelector("body").addEventListener("click", ()=>{
+    if (!clicked) {
+      const startTime = audioGenerator.audioContext.currentTime;
+      playChordProgression(startTime);
+    }
+    clicked = true
+  })
 });
