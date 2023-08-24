@@ -309,17 +309,20 @@ function generateColorsFromChord(chord) {
 }
 
 class AudioGenerator {
-  constructor() {
+   constructor() {
     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
     if (!this.audioContext) {
       throw "Web Audio API is not supported in this browser.";
     }
-    this.masterGainNode = this.audioContext.createGain(); // Create a gain node
-    this.masterGainNode.connect(this.audioContext.destination); // Connect the gain node to the audio destination
+    this.masterGainNode = this.audioContext.createGain();
+    this.masterGainNode.connect(this.audioContext.destination);
+    this.setGain(0); // Mute by default
   }
+
   setGain(value) {
-    console.log("hit", value)
+    console.log(value)
     this.masterGainNode.gain.setValueAtTime(value, this.audioContext.currentTime);
+    console.log(this.masterGainNode)
   }
 
   mute() {
@@ -329,22 +332,24 @@ class AudioGenerator {
   unmute() {
     this.setGain(1);
   }
+
   createBuffer(frequencies, duration) {
   const sampleRate = this.audioContext.sampleRate;
   const bufferSize = duration * sampleRate;
   const buffer = this.audioContext.createBuffer(1, bufferSize, sampleRate);
   const data = buffer.getChannelData(0);
 
-  for (let i = 0; i < bufferSize; i++) {
-    const time = i / sampleRate;
-    let value = 0;
-    for (const frequency of frequencies) {
-      value += Math.sin(2 * Math.PI * frequency * time);
+    for (let i = 0; i < bufferSize; i++) {
+      const time = i / sampleRate;
+      let value = 0;
+      for (const frequency of frequencies) {
+        value += Math.sin(2 * Math.PI * frequency * time);
+      }
+      data[i] = value;
     }
-    data[i] = value;
+  
+    return buffer;
   }
-  return buffer;
-}
 
   playBuffer(buffer, startTime) {
     const source = this.audioContext.createBufferSource();
@@ -388,7 +393,9 @@ function playChordProgression(startTime) {
 
   const chordSource = audioGenerator.audioContext.createBufferSource();
   chordSource.buffer = chordBuffer;
-  chordSource.connect(audioGenerator.audioContext.destination);
+  chordSource.connect(audioGenerator.masterGainNode)
+
+ 
   
   // Schedule the chord source to start at the given startTime
   chordSource.start(startTime);
@@ -415,7 +422,7 @@ function playDrumLoop(startTime) {
     [...kickFrequencies, ...snareFrequencies], 
     drumInterval / R.random_num(100,1000), 
   );
-  drumSource.connect(audioGenerator.audioContext.destination);
+  drumSource.connect(audioGenerator.masterGainNode);
   drumSource.connect(analyser)
   // Schedule the drum source to start at the given startTime
   drumSource.start(startTime);
@@ -447,12 +454,25 @@ draw2()
 
 let clicked = false
 window.addEventListener('load', () => {
-  audioGenerator.mute(); 
-  document.querySelector("body").addEventListener("click", ()=>{
+  const startTime = audioGenerator.audioContext.currentTime;
+  audioGenerator.mute(); // Mute the audio first
+
+  // Start the audio playback after muting
+  playChordProgression(startTime);
+
+  // Enable sound when the user interacts
+  const body = document.querySelector("body");
+  body.addEventListener("click", () => {
     if (!clicked) {
-      const startTime = audioGenerator.audioContext.currentTime;
-      playChordProgression(startTime);
-    }
-    clicked = true
-  })
+      audioGenerator.unmute(); // Unmute when the user clicks
+      clicked = true;
+    } 
+  });
 });
+
+
+
+
+
+
+
