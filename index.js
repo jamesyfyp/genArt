@@ -10,6 +10,7 @@ function generateRandomTokenData() {
 }
 const tokenData = generateRandomTokenData();
 // Prohibition Deterministic Random
+// Prohibition Deterministic Random
 class Random {
   constructor() {
     this.useA = false;
@@ -320,9 +321,7 @@ class AudioGenerator {
   }
 
   setGain(value) {
-    console.log(value)
     this.masterGainNode.gain.setValueAtTime(value, this.audioContext.currentTime);
-    console.log(this.masterGainNode)
   }
 
   mute() {
@@ -452,27 +451,43 @@ analyser2.getByteTimeDomainData(dataArray2);
 draw()
 draw2()
 
+// add vol slider
+let volSlider = document.createElement("input")
+volSlider.style.position = "absolute"
+volSlider.style.bottom = "10px"
+volSlider.style.right = "10px"
+volSlider.style.zIndex = 200
+volSlider.style.setProperty('--track-color', 'blue')
+volSlider.style.setProperty('--thumb-color', 'red')
+volSlider.defaultValue = "on"
+volSlider.type = "range"
+volSlider.min="0"
+volSlider.max="1"
+volSlider.value="0"
+volSlider.step = .1
+volSlider.addEventListener("input", () => {
+audioGenerator.setGain(volSlider.value)
+})
+if (navigator.userAgent.indexOf('Chrome') !== -1) {
+    volSlider.style.setProperty('--webkit-thumb-color', 'var(--thumb-color)');
+} else if (navigator.userAgent.indexOf('Firefox') !== -1) {
+    volSlider.style.setProperty('--moz-thumb-color', 'var(--thumb-color)');
+} else if (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.userAgent.indexOf('Trident') !== -1) {
+    volSlider.style.setProperty('--ms-thumb-color', 'var(--thumb-color)');
+}
+document.getElementById("art").append(volSlider)
+
 let clicked = false
 window.addEventListener('load', () => {
   const startTime = audioGenerator.audioContext.currentTime;
-  audioGenerator.mute(); // Mute the audio first
-
-  // Start the audio playback after muting
-  playChordProgression(startTime);
-
+  audioGenerator.mute(); 
   // Enable sound when the user interacts
   const body = document.querySelector("body");
   body.addEventListener("click", () => {
     if (!clicked) {
-      audioGenerator.unmute(); // Unmute when the user clicks
+      playChordProgression(startTime);
       clicked = true;
     } 
   });
 });
-
-
-
-
-
-
 
