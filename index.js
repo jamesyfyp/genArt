@@ -85,8 +85,7 @@ function canvasConfig() {
   container.style.position = "relative"
   container.style.alignItems = "center";
   container.style.height = "100vh";
-  let canvas = document.createElement("canvas");
-  canvas.id = "canvas";
+  
   body.appendChild(container);
   let filter = document.createElement("div")
   filter.id = "filter_1"
@@ -102,6 +101,9 @@ function canvasConfig() {
   filter2.style.position = "absolute"
   filter2.style.height =  taller ? `${width}px` : `${height}px`;
   container.appendChild(filter2);
+  let canvas = document.createElement("canvas");
+  canvas.id = "canvas";
+  canvas.style.position = "absolute"
   container.appendChild(canvas);
   canvas.width = taller ? width : height;
   canvas.height = taller ? width : height;
@@ -451,31 +453,41 @@ analyser2.getByteTimeDomainData(dataArray2);
 draw()
 draw2()
 
+let canvasDimensions = document.getElementById("canvas").getBoundingClientRect()
 // add vol slider
-let volSlider = document.createElement("input")
-volSlider.style.position = "absolute"
-volSlider.style.bottom = "10px"
-volSlider.style.right = "10px"
-volSlider.style.zIndex = 200
-volSlider.style.setProperty('--track-color', 'blue')
-volSlider.style.setProperty('--thumb-color', 'red')
-volSlider.defaultValue = "on"
-volSlider.type = "range"
-volSlider.min="0"
-volSlider.max="1"
-volSlider.value="0"
-volSlider.step = .1
-volSlider.addEventListener("input", () => {
-audioGenerator.setGain(volSlider.value)
+let volumeContainer = document.createElement("div")
+volumeContainer.style.position = "relative"
+volumeContainer.style.top = `${canvasDimensions.height/2 -30}px`
+volumeContainer.style.borderRadius = "20px"
+volumeContainer.style.boxShadow = "inset 10px 10px 20px rgba(190, 190, 190, .2), inset -10px -10px 20px rgba(255, 255, 255, .2"
+// incase we want it to the right/left volumeContainer.style.left = `${canvasDimensions.width/2 -60}px`
+volumeContainer.style.zIndex = 200
+volumeContainer.style.height = "40px"
+volumeContainer.style.width = "100px"
+volumeContainer.style.background = "rgba(255, 255, 255, .5)"
+volumeContainer.style.display = "flex" 
+let currentVol = document.createElement("p")
+currentVol.id = "volume"
+currentVol.style.width = "33%"
+currentVol.style.textAlign = "center"
+currentVol.style.margin = "auto"
+currentVol.innerText = "0"
+volumeContainer.appendChild(currentVol)
+let volumeUp = document.createElement("div")
+volumeUp.addEventListener("click", ()=>{
+  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value + .1)
+  console.log(audioGenerator.masterGainNode.gain.value)
 })
-if (navigator.userAgent.indexOf('Chrome') !== -1) {
-    volSlider.style.setProperty('--webkit-thumb-color', 'var(--thumb-color)');
-} else if (navigator.userAgent.indexOf('Firefox') !== -1) {
-    volSlider.style.setProperty('--moz-thumb-color', 'var(--thumb-color)');
-} else if (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.userAgent.indexOf('Trident') !== -1) {
-    volSlider.style.setProperty('--ms-thumb-color', 'var(--thumb-color)');
-}
-document.getElementById("art").append(volSlider)
+volumeUp.style.width = "33%"
+volumeContainer.appendChild(volumeUp)
+let volumeDown = document.createElement("div")
+volumeDown.addEventListener("click", ()=>{
+  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
+  console.log(audioGenerator.masterGainNode.gain.value)
+})
+volumeDown.style.width = "33%"
+volumeContainer.appendChild(volumeDown)
+document.getElementById("art").append(volumeContainer)
 
 let clicked = false
 window.addEventListener('load', () => {
