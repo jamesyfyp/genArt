@@ -486,20 +486,19 @@ currentVol.style.margin = "auto"
 currentVol.innerText = "0"
 volumeContainer.appendChild(currentVol)
 let volumeUp = document.createElement("div")
+volumeUp.style.width = "33%"
 volumeUp.style.borderLeft = "2px solid white";
 volumeUp.style.borderRight = "2px solid white";
+volumeUp.style.transition = "background-color 0.5s"; 
 volumeUp.id = "volumeUp"
-volumeUp.addEventListener("click", ()=>{
-  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value + .1)
-})
-volumeUp.style.width = "33%"
-//create svg
+//create svg +
 const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 svgElement.setAttribute("width", "30");
 svgElement.setAttribute("height", "30");
 svgElement.style.marginLeft = "6px"
 svgElement.style.marginTop = "5px"
 const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+horizontalLine.style.transition = "fill 0.5"
 horizontalLine.setAttribute("x1", "5");
 horizontalLine.setAttribute("y1", "15");
 horizontalLine.setAttribute("x2", "25");
@@ -507,6 +506,7 @@ horizontalLine.setAttribute("y2", "15");
 horizontalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
 horizontalLine.setAttribute("stroke-width", "3");
 const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+verticalLine.style.transition = "fill 0.5"
 verticalLine.setAttribute("x1", "15");
 verticalLine.setAttribute("y1", "5");
 verticalLine.setAttribute("x2", "15");
@@ -515,9 +515,27 @@ verticalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
 verticalLine.setAttribute("stroke-width", "3");
 svgElement.appendChild(horizontalLine);
 svgElement.appendChild(verticalLine);
+volumeUp.addEventListener("click", ()=>{
+  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value + .1)
+})
+volumeUp.addEventListener("mouseenter", () => {
+  volumeUp.style.backgroundColor = "rgba(255, 255, 255, .8)"; // Invert color on hover
+  horizontalLine.setAttribute("stroke", "grey");
+  verticalLine.setAttribute("stroke", "grey");
+});
+
+volumeUp.addEventListener("mouseleave", () => {
+  volumeUp.style.backgroundColor = "rgba(255, 255, 255, .0)"; // Revert color on hover out
+  horizontalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
+  verticalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
+});
+
 volumeUp.appendChild(svgElement)
 volumeContainer.appendChild(volumeUp)
 let volumeDown = document.createElement("div")
+volumeDown.style.borderTopRightRadius = "30px"
+volumeDown.style.borderBottomRightRadius = "30px"
+volumeDown.style.transition = "background-color 0.5s"; 
 volumeDown.id = "volumeDown"
 volumeDown.addEventListener("click", ()=>{
   audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
@@ -528,6 +546,7 @@ svgElement2.setAttribute("height", "30");
 svgElement2.style.marginLeft = "5px"
 svgElement2.style.marginTop = "5px"
 const horizontalLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+horizontalLine2.style.transition = "fill 0.3"
 horizontalLine2.setAttribute("x1", "5");
 horizontalLine2.setAttribute("y1", "15");
 horizontalLine2.setAttribute("x2", "25");
@@ -536,6 +555,17 @@ horizontalLine2.setAttribute("stroke", "rgba(255, 255, 255, .7");
 horizontalLine2.setAttribute("stroke-width", "3");
 svgElement2.appendChild(horizontalLine2);
 volumeDown.appendChild(svgElement2)
+volumeDown.addEventListener("click", ()=>{
+  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
+})
+volumeDown.addEventListener("mouseenter", () => {
+  volumeDown.style.backgroundColor = "rgba(255, 255, 255, .8)"; // Invert color on hover
+  horizontalLine2.setAttribute("stroke", "grey");
+});
+volumeDown.addEventListener("mouseleave", () => {
+  volumeDown.style.backgroundColor = "rgba(255, 255, 255, .0)"; // Revert color on hover out
+  horizontalLine2.setAttribute("stroke", "rgba(255, 255, 255, .7");
+});
 volumeContainer.appendChild(volumeDown)
 document.getElementById("art").append(volumeContainer)
 
@@ -556,4 +586,4 @@ window.addEventListener('load', () => {
 
 
 ///TODO
-///[] make mouseenter and exit animations 
+///
