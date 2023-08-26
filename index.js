@@ -328,7 +328,20 @@ class AudioGenerator {
   }
 
   setGain(value) {
-    this.masterGainNode.gain.setValueAtTime(value, this.audioContext.currentTime);
+    let val = Math.round(value * 10) / 10;
+    if (val > 10 ) {
+      console.log("hit top")
+      document.getElementById("volumeUp")
+    }
+    if (val <= 0 ) {
+      console.log("hit bot")
+      document.getElementById("volumeDisplay")
+    }
+  
+    document.getElementById("volumeDisplay") && (document.getElementById("volumeDisplay").innerText = val * 10);
+    
+    this.masterGainNode.gain.setValueAtTime(val, this.audioContext.currentTime);
+    
   }
 
   mute() {
@@ -336,7 +349,7 @@ class AudioGenerator {
   }
 
   unmute() {
-    this.setGain(1);
+    this.setGain(.1);
   }
 
   createBuffer(frequencies, duration) {
@@ -434,8 +447,6 @@ function playDrumLoop(startTime) {
   drumSource.start(startTime);
 }
 
-
-
 // Start
 let chordDuration = R.random_num(.1, 2);
 let ctx = document.getElementById("canvas").getContext("2d");
@@ -457,7 +468,7 @@ volumeContainer.style.top = `${canvasDimensions.height/2 -30}px`
 volumeContainer.style.border = "2px solid rgba(255, 255, 255, .7)"
 volumeContainer.style.borderRadius = "20px"
 volumeContainer.style.boxShadow = "inset 10px 10px 20px rgba(190, 190, 190, .7), inset -10px -10px 20px rgba(255, 255, 255, .2"
- volumeContainer.style.transform = "scale(.7)"
+volumeContainer.style.transform = "scale(.7)"
 // incase we want it to the right/left volumeContainer.style.left = `${canvasDimensions.width/2 -60}px`
 volumeContainer.style.zIndex = 200
 volumeContainer.style.height = "40px"
@@ -465,26 +476,29 @@ volumeContainer.style.width = "130px"
 volumeContainer.style.background = "rgba(255, 255, 255, .5)"
 volumeContainer.style.display = "flex" 
 let currentVol = document.createElement("p")
-currentVol.id = "volume"
+currentVol.id = "volumeDisplay"
 currentVol.style.fontFamily = "Space Mono, monospace";
 currentVol.style.fontWeight = "1000"
 currentVol.style.color = "rgba(255, 255, 255, .7)"
 currentVol.style.width = "33%"
 currentVol.style.textAlign = "center"
 currentVol.style.margin = "auto"
-currentVol.innerText = "10"
+currentVol.innerText = "0"
 volumeContainer.appendChild(currentVol)
 let volumeUp = document.createElement("div")
+volumeUp.style.borderLeft = "2px solid white";
+volumeUp.style.borderRight = "2px solid white";
+volumeUp.id = "volumeUp"
 volumeUp.addEventListener("click", ()=>{
   audioGenerator.setGain(audioGenerator.masterGainNode.gain.value + .1)
-  console.log(audioGenerator.masterGainNode.gain.value)
 })
 volumeUp.style.width = "33%"
 //create svg
 const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 svgElement.setAttribute("width", "30");
 svgElement.setAttribute("height", "30");
-svgElement.style.marginTop = "4px"
+svgElement.style.marginLeft = "6px"
+svgElement.style.marginTop = "5px"
 const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
 horizontalLine.setAttribute("x1", "5");
 horizontalLine.setAttribute("y1", "15");
@@ -504,14 +518,15 @@ svgElement.appendChild(verticalLine);
 volumeUp.appendChild(svgElement)
 volumeContainer.appendChild(volumeUp)
 let volumeDown = document.createElement("div")
+volumeDown.id = "volumeDown"
 volumeDown.addEventListener("click", ()=>{
   audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
-  console.log(audioGenerator.masterGainNode.gain.value)
 })
 const svgElement2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 svgElement2.setAttribute("width", "30");
 svgElement2.setAttribute("height", "30");
-svgElement2.style.marginTop = "4px"
+svgElement2.style.marginLeft = "5px"
+svgElement2.style.marginTop = "5px"
 const horizontalLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
 horizontalLine2.setAttribute("x1", "5");
 horizontalLine2.setAttribute("y1", "15");
@@ -529,7 +544,6 @@ volumeDown.style.width = "33%"
 let clicked = false
 window.addEventListener('load', () => {
   const startTime = audioGenerator.audioContext.currentTime;
-  audioGenerator.mute(); 
   // Enable sound when the user interacts
   const body = document.querySelector("body");
   body.addEventListener("click", () => {
