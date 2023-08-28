@@ -115,6 +115,116 @@ function canvasConfig() {
 }
 canvasConfig();
 
+let canvasDimensions = document.getElementById("canvas").getBoundingClientRect()
+// add vol slider
+let volumeContainer = document.createElement("div")
+volumeContainer.style.position = "relative"
+volumeContainer.style.top = `${canvasDimensions.height/2 -30}px`
+volumeContainer.style.border = "2px solid rgba(255, 255, 255, .7)"
+volumeContainer.style.borderRadius = "20px"
+volumeContainer.style.boxShadow = "inset 10px 10px 20px rgba(190, 190, 190, .7), inset -10px -10px 20px rgba(255, 255, 255, .2"
+volumeContainer.style.transform = "scale(.7)"
+// incase we want it to the right/left volumeContainer.style.left = `${canvasDimensions.width/2 -60}px`
+volumeContainer.style.zIndex = 200
+volumeContainer.style.height = "40px"
+volumeContainer.style.width = "130px"
+volumeContainer.style.background = "rgba(255, 255, 255, .5)"
+volumeContainer.style.display = "flex" 
+let currentVol = document.createElement("p")
+currentVol.id = "volumeDisplay"
+currentVol.style.fontFamily = "Space Mono, monospace";
+currentVol.style.fontWeight = "1000"
+currentVol.style.color = "rgba(255, 255, 255, .7)"
+currentVol.style.width = "33%"
+currentVol.style.textAlign = "center"
+currentVol.style.margin = "auto"
+currentVol.style.userSelect = "none"
+currentVol.innerText = "0"
+volumeContainer.appendChild(currentVol)
+let volumeUp = document.createElement("div")
+volumeUp.style.width = "33%"
+volumeUp.style.transition = "background-color 0.5s"; 
+volumeUp.id = "volumeUp"
+//create svg +
+const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svgElement.setAttribute("width", "30");
+svgElement.setAttribute("height", "30");
+svgElement.style.marginLeft = "6px"
+svgElement.style.marginTop = "5px"
+const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+horizontalLine.style.transition = "fill 0.5"
+horizontalLine.setAttribute("x1", "5");
+horizontalLine.setAttribute("y1", "15");
+horizontalLine.setAttribute("x2", "25");
+horizontalLine.setAttribute("y2", "15");
+horizontalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
+horizontalLine.setAttribute("stroke-width", "3");
+const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+verticalLine.style.transition = "fill 0.5"
+verticalLine.setAttribute("x1", "15");
+verticalLine.setAttribute("y1", "5");
+verticalLine.setAttribute("x2", "15");
+verticalLine.setAttribute("y2", "25");
+verticalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
+verticalLine.setAttribute("stroke-width", "3");
+svgElement.appendChild(horizontalLine);
+svgElement.appendChild(verticalLine);
+function setVolumeUp(){
+  event.preventDefault()
+  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value + .1)
+}
+volumeUp.addEventListener("click", setVolumeUp)
+volumeUp.addEventListener("mouseenter", () => {
+  volumeUp.style.backgroundColor = "rgba(255, 255, 255, .8)"; // Invert color on hover
+  horizontalLine.setAttribute("stroke", "grey");
+  verticalLine.setAttribute("stroke", "grey");
+});
+
+volumeUp.addEventListener("mouseleave", () => {
+  volumeUp.style.backgroundColor = "rgba(255, 255, 255, .0)"; // Revert color on hover out
+  horizontalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
+  verticalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
+});
+
+volumeUp.appendChild(svgElement)
+volumeContainer.appendChild(volumeUp)
+let volumeDown = document.createElement("div")
+volumeDown.style.borderTopRightRadius = "30px"
+volumeDown.style.borderBottomRightRadius = "30px"
+volumeDown.style.transition = "background-color 0.5s"; 
+volumeDown.id = "volumeDown"
+const svgElement2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svgElement2.setAttribute("width", "30");
+svgElement2.setAttribute("height", "30");
+svgElement2.style.marginLeft = "5px"
+svgElement2.style.marginTop = "5px"
+const horizontalLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+horizontalLine2.style.transition = "fill 0.3"
+horizontalLine2.setAttribute("x1", "5");
+horizontalLine2.setAttribute("y1", "15");
+horizontalLine2.setAttribute("x2", "25");
+horizontalLine2.setAttribute("y2", "15");
+horizontalLine2.setAttribute("stroke", "rgba(255, 255, 255, .7");
+horizontalLine2.setAttribute("stroke-width", "3");
+svgElement2.appendChild(horizontalLine2);
+volumeDown.appendChild(svgElement2)
+function setVolumeDown () {
+   audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
+}
+volumeDown.addEventListener("click", setVolumeDown)
+volumeDown.addEventListener("mouseenter", () => {
+  volumeDown.style.backgroundColor = "rgba(255, 255, 255, .8)"; // Invert color on hover
+  horizontalLine2.setAttribute("stroke", "grey");
+});
+volumeDown.addEventListener("mouseleave", () => {
+  volumeDown.style.backgroundColor = "rgba(255, 255, 255, .0)"; // Revert color on hover out
+  horizontalLine2.setAttribute("stroke", "rgba(255, 255, 255, .7");
+});
+volumeContainer.appendChild(volumeDown)
+document.getElementById("art").append(volumeContainer)
+
+volumeDown.style.width = "33%"
+
 function doArt(color) {
   const ctx = document.getElementById("canvas").getContext("2d");
   ctx.fillStyle = color;
@@ -329,13 +439,19 @@ class AudioGenerator {
 
   setGain(value) {
     let val = Math.round(value * 10) / 10;
-    if (val > 10 ) {
-      console.log("hit top")
-      document.getElementById("volumeUp")
+    if (val >= 1 ) {
+      document.getElementById("volumeUp").removeEventListener("click", setVolumeUp)
+      document.getElementById("volumeUp").style.filter = "invert(1)"
+    } else {
+      document.getElementById("volumeUp").addEventListener("click", setVolumeUp)
+      document.getElementById("volumeUp").style.filter = "none"
     }
     if (val <= 0 ) {
-      console.log("hit bot")
-      document.getElementById("volumeDisplay")
+      document.getElementById("volumeDown").removeEventListener("click", setVolumeDown)
+      document.getElementById("volumeDown").style.filter = "invert(1)"
+    } else {
+      document.getElementById("volumeDown").addEventListener("click", setVolumeDown)
+      document.getElementById("volumeDown").style.filter = "none"
     }
   
     document.getElementById("volumeDisplay") && (document.getElementById("volumeDisplay").innerText = val * 10);
@@ -460,116 +576,7 @@ const dataArray2 = new Uint8Array(bufferLength2);
 analyser2.getByteTimeDomainData(dataArray2);
 draw()
 draw2()
-let canvasDimensions = document.getElementById("canvas").getBoundingClientRect()
-// add vol slider
-let volumeContainer = document.createElement("div")
-volumeContainer.style.position = "relative"
-volumeContainer.style.top = `${canvasDimensions.height/2 -30}px`
-volumeContainer.style.border = "2px solid rgba(255, 255, 255, .7)"
-volumeContainer.style.borderRadius = "20px"
-volumeContainer.style.boxShadow = "inset 10px 10px 20px rgba(190, 190, 190, .7), inset -10px -10px 20px rgba(255, 255, 255, .2"
-volumeContainer.style.transform = "scale(.7)"
-// incase we want it to the right/left volumeContainer.style.left = `${canvasDimensions.width/2 -60}px`
-volumeContainer.style.zIndex = 200
-volumeContainer.style.height = "40px"
-volumeContainer.style.width = "130px"
-volumeContainer.style.background = "rgba(255, 255, 255, .5)"
-volumeContainer.style.display = "flex" 
-let currentVol = document.createElement("p")
-currentVol.id = "volumeDisplay"
-currentVol.style.fontFamily = "Space Mono, monospace";
-currentVol.style.fontWeight = "1000"
-currentVol.style.color = "rgba(255, 255, 255, .7)"
-currentVol.style.width = "33%"
-currentVol.style.textAlign = "center"
-currentVol.style.margin = "auto"
-currentVol.innerText = "0"
-volumeContainer.appendChild(currentVol)
-let volumeUp = document.createElement("div")
-volumeUp.style.width = "33%"
-volumeUp.style.borderLeft = "2px solid white";
-volumeUp.style.borderRight = "2px solid white";
-volumeUp.style.transition = "background-color 0.5s"; 
-volumeUp.id = "volumeUp"
-//create svg +
-const svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-svgElement.setAttribute("width", "30");
-svgElement.setAttribute("height", "30");
-svgElement.style.marginLeft = "6px"
-svgElement.style.marginTop = "5px"
-const horizontalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-horizontalLine.style.transition = "fill 0.5"
-horizontalLine.setAttribute("x1", "5");
-horizontalLine.setAttribute("y1", "15");
-horizontalLine.setAttribute("x2", "25");
-horizontalLine.setAttribute("y2", "15");
-horizontalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
-horizontalLine.setAttribute("stroke-width", "3");
-const verticalLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-verticalLine.style.transition = "fill 0.5"
-verticalLine.setAttribute("x1", "15");
-verticalLine.setAttribute("y1", "5");
-verticalLine.setAttribute("x2", "15");
-verticalLine.setAttribute("y2", "25");
-verticalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
-verticalLine.setAttribute("stroke-width", "3");
-svgElement.appendChild(horizontalLine);
-svgElement.appendChild(verticalLine);
-volumeUp.addEventListener("click", ()=>{
-  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value + .1)
-})
-volumeUp.addEventListener("mouseenter", () => {
-  volumeUp.style.backgroundColor = "rgba(255, 255, 255, .8)"; // Invert color on hover
-  horizontalLine.setAttribute("stroke", "grey");
-  verticalLine.setAttribute("stroke", "grey");
-});
 
-volumeUp.addEventListener("mouseleave", () => {
-  volumeUp.style.backgroundColor = "rgba(255, 255, 255, .0)"; // Revert color on hover out
-  horizontalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
-  verticalLine.setAttribute("stroke", "rgba(255, 255, 255, .7");
-});
-
-volumeUp.appendChild(svgElement)
-volumeContainer.appendChild(volumeUp)
-let volumeDown = document.createElement("div")
-volumeDown.style.borderTopRightRadius = "30px"
-volumeDown.style.borderBottomRightRadius = "30px"
-volumeDown.style.transition = "background-color 0.5s"; 
-volumeDown.id = "volumeDown"
-volumeDown.addEventListener("click", ()=>{
-  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
-})
-const svgElement2 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-svgElement2.setAttribute("width", "30");
-svgElement2.setAttribute("height", "30");
-svgElement2.style.marginLeft = "5px"
-svgElement2.style.marginTop = "5px"
-const horizontalLine2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-horizontalLine2.style.transition = "fill 0.3"
-horizontalLine2.setAttribute("x1", "5");
-horizontalLine2.setAttribute("y1", "15");
-horizontalLine2.setAttribute("x2", "25");
-horizontalLine2.setAttribute("y2", "15");
-horizontalLine2.setAttribute("stroke", "rgba(255, 255, 255, .7");
-horizontalLine2.setAttribute("stroke-width", "3");
-svgElement2.appendChild(horizontalLine2);
-volumeDown.appendChild(svgElement2)
-volumeDown.addEventListener("click", ()=>{
-  audioGenerator.setGain(audioGenerator.masterGainNode.gain.value - .1)
-})
-volumeDown.addEventListener("mouseenter", () => {
-  volumeDown.style.backgroundColor = "rgba(255, 255, 255, .8)"; // Invert color on hover
-  horizontalLine2.setAttribute("stroke", "grey");
-});
-volumeDown.addEventListener("mouseleave", () => {
-  volumeDown.style.backgroundColor = "rgba(255, 255, 255, .0)"; // Revert color on hover out
-  horizontalLine2.setAttribute("stroke", "rgba(255, 255, 255, .7");
-});
-volumeContainer.appendChild(volumeDown)
-document.getElementById("art").append(volumeContainer)
-
-volumeDown.style.width = "33%"
 
 let clicked = false
 window.addEventListener('load', () => {
