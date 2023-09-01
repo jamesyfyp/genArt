@@ -222,9 +222,10 @@ volumeDown.addEventListener("mouseleave", () => {
 });
 volumeContainer.appendChild(volumeDown)
 document.getElementById("art").append(volumeContainer)
-
 volumeDown.style.width = "33%"
 
+
+//set up drawing
 function doArt(color) {
   const ctx = document.getElementById("canvas").getContext("2d");
   ctx.fillStyle = color;
