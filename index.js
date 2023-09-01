@@ -68,7 +68,6 @@ class Random {
 
 const R = new Random(); // Prohb random initialization
 
-//google font
 const linkElement = document.createElement("link");
 linkElement.rel = "stylesheet";
 linkElement.href = "https://fonts.googleapis.com/css2?family=Space+Mono&display=swap";
@@ -119,7 +118,7 @@ let canvasDimensions = document.getElementById("canvas").getBoundingClientRect()
 // add vol slider
 let volumeContainer = document.createElement("div")
 volumeContainer.style.position = "relative"
-volumeContainer.style.top = `${canvasDimensions.height/2 -30}px`
+volumeContainer.style.bottom = `${canvasDimensions.height/2 -30}px`
 volumeContainer.style.border = "2px solid rgba(255, 255, 255, .7)"
 volumeContainer.style.borderRadius = "20px"
 volumeContainer.style.boxShadow = "inset 10px 10px 20px rgba(190, 190, 190, .7), inset -10px -10px 20px rgba(255, 255, 255, .2"
@@ -130,6 +129,7 @@ volumeContainer.style.height = "40px"
 volumeContainer.style.width = "130px"
 volumeContainer.style.background = "rgba(255, 255, 255, .5)"
 volumeContainer.style.display = "flex" 
+volumeContainer.style.transition = "transform .3s ease"
 let currentVol = document.createElement("p")
 currentVol.id = "volumeDisplay"
 currentVol.style.fontFamily = "Space Mono, monospace";
@@ -223,6 +223,15 @@ volumeDown.addEventListener("mouseleave", () => {
 volumeContainer.appendChild(volumeDown)
 document.getElementById("art").append(volumeContainer)
 volumeDown.style.width = "33%"
+
+volumeContainer.addEventListener("mouseenter", ()=>{
+  volumeContainer.style.transform = "scale(.7) "
+})
+
+volumeContainer.addEventListener("mouseleave", ()=>{
+
+  volumeContainer.style.transform = "scale(.3) translateY(-2em)"
+})
 
 
 //set up drawing
@@ -591,7 +600,3 @@ window.addEventListener('load', () => {
     } 
   });
 });
-
-
-///TODO
-///
